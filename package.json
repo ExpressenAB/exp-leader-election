@@ -1,0 +1,30 @@
+{
+  "name": "exp-leader-election",
+  "version": "0.1.0",
+  "description": "Simple leader election library",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/norla/exp-leader-election.git"
+  },
+  "keywords": [
+    "Leader",
+    "election"
+  ],
+  "author": "Mattias Norlander <mattias.norlander@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/norla/exp-leader-election/issues"
+  },
+  "homepage": "https://github.com/norla/exp-leader-election#readme",
+  "devDependencies": {
+    "eslint": "^2.1.0",
+    "mocha": "^2.4.5",
+    "mocha-cakes-2": "^0.1.0"
+  },
+  "dependencies": {
+    "consul": "^0.23.0"
+  }
+}

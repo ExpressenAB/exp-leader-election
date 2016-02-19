@@ -1,0 +1,2 @@
+--require mocha-cakes-2
+--timeout 1
