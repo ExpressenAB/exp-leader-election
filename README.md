@@ -39,12 +39,13 @@ If you want your application to crash in case of leader election errors, just om
 ## Configuration
 
 ```javascript
-{  
+{ 
+  key: ..., // path to key in consul (string)
+  debug: ...,  // function for debugging (function)
   consul: {
     host: // hostmame or ip (string),
-    port: // (string)
-  },
-  key
-
+    port: // (string),
+    token: // auth token (string)
+  }
 }
 ```
