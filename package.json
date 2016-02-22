@@ -21,6 +21,7 @@
   "homepage": "https://github.com/norla/exp-leader-election#readme",
   "devDependencies": {
     "eslint": "^2.1.0",
+    "espree": "^3.0.1",
     "mocha": "^2.4.5",
     "mocha-cakes-2": "^0.1.0"
   },

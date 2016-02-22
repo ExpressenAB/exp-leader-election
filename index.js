@@ -1,30 +1,25 @@
+"use strict";
 
 var consul = require("consul");
-var os = require("os");
 var EventEmitter = require("events");
 
-function start(options) {
-    var client = consul({host: "consul-web.service.consul.xpr.dex.nu", port: "80",
-                        defaults: {token: "8291ec9a-5f1e-a32c-aee5-3428d56f9135"}});
-    var emitter = new EventEmitter();
-    var isLeader = false;
-    var key = options.key;
-    var sessionId;
-    var waitIndex;
+var READ_WAIT = "180"; // seconds
+var LOCK_DELAY = "10"; // seconds
+var TTL = "15";        // seconds
 
-    client.session.create({ttl: "15s", lockdelay: "1s"}, function(err, session) {
-      console.log("Session created", session)
-      if (err) return emitter.emit("error", err);
-      sessionId = session.ID;
-      setInterval(renewSession, 10000);
-      setImmediate(claimLeadership);
-    });
+function session(options, emitter) {
+    emitter = emitter || new EventEmitter();
+    var cOpts = options.consul || {};
+    var client = consul({host: cOpts.host, port: cOpts.port, defaults: {token: cOpts.token}});
+    var isLeader = false;
+    var debug = options.debug || function () {};
+    var key = options.key;
+    var sessionId, renewTimer, waitIndex, resetTimer;
 
     function claimLeadership() {
-      console.log("Claiming", sessionId)
-      client.kv.set(options.key, os.hostname, {acquire: sessionId}, function (err, acquired) {
-        if (err) return emitter.emit("error", err);
-        console.log("Claimed", acquired);
+      client.kv.set(key, "leader", {acquire: sessionId}, function (err, acquired) {
+        if (handleError(err)) return;
+        debug("Claimed. Leader: ", isLeader, ", result:", acquired);
         if (!isLeader && acquired) {
           emitter.emit("gainedLeadership");
         }
@@ -37,13 +32,17 @@ function start(options) {
     }
 
     function wait() {
-      console.log("Waiting", waitIndex);
-      client.kv.get({key: key, index: waitIndex, wait: "5m"}, function(err, result) {
-        console.log("Got", result);
-        if (err) return emitter.emit("error");
+      client.kv.get({key: key, index: waitIndex, wait: READ_WAIT + "s"}, function (err, result) {
+        if (handleError(err)) return;
+        debug("Read key", key, "result: ", result);
         waitIndex = result.ModifyIndex;
         if (!result.Session) {
-          setTimeout(claimLeadership, 1000); // TODO correlate with lock delay
+          if (isLeader) {
+            isLeader = false;
+            emitter.emit("lostLeadership");
+          }
+          debug("No session for key", key, ", will try to aquire in", LOCK_DELAY, "secs");
+          setTimeout(claimLeadership, LOCK_DELAY * 1000);
         } else {
           setImmediate(wait);
         }
@@ -51,12 +50,32 @@ function start(options) {
     }
 
     function renewSession() {
-      client.session.renew(sessionId, function(err) {
-        if (err) console.log("Error renewing session: ", sessionId)
+      client.session.renew(sessionId, function (err) {
+          if (handleError(err)) return;
+         debug("Renewed session", sessionId);
       });
     }
+
+    function handleError(err) {
+      if (resetTimer) return true;
+      if (err) {
+        emitter.emit("error", err);
+        clearInterval(renewTimer);
+        client.session.destroy(sessionId, function () {});
+        resetTimer = setTimeout(function () { session(options, emitter); }, 3000);
+      }
+      return err;
+    }
+
+    client.session.create({ttl: TTL + "s", lockdelay: LOCK_DELAY + "s"}, function (err, session) {
+      if (handleError(err)) return;
+      debug("Created new session", session);
+      sessionId = session.ID;
+      renewTimer = setInterval(renewSession, TTL * 1000 * 0.9);
+      return setImmediate(claimLeadership);
+    });
 
     return emitter;
 }
 
-module.exports = start;
+module.exports = session;
