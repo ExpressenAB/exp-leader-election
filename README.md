@@ -22,7 +22,7 @@ leaderElection(config)
 .on("gainedLeadership", function () {
     // Whoo-hoo, we have been elected as leader! Do work.
   })
-.on("gainedLeadership"), function () {
+.on("lostLeadership"), function () {
    // Uh-oh, we are lo longer the leader! Stop work.
   })
 .on("error"), function () {
@@ -39,7 +39,7 @@ If you want your application to crash in case of leader election errors, just om
 ## Configuration
 
 ```javascript
-{ 
+{
   key: ..., // path to key in consul (string)
   debug: ...,  // function for debugging (function)
   consul: {
