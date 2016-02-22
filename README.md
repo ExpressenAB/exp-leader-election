@@ -10,7 +10,7 @@ https://www.consul.io/docs/guides/leader-election.html
 
 var leaderElection = require("exp-leader-election");
 
-'''javascript
+```javascript
 var config = {
   key: "locks/my-little-service";
   consul: {
@@ -29,7 +29,7 @@ leaderElection(config)
    // Error occured. State is unknown, so depending on the application we might need to stop work.
    log.error("Leader election error occured", error);
   });
-'''
+```
 
 ### The let-it-crash way
 
@@ -38,7 +38,7 @@ If you want your application to crash in case of leader election errors, just om
 
 ## Configuration
 
-'''javascript
+```javascript
 {  
   consul: {
     host: // hostmame or ip (string),
@@ -47,4 +47,4 @@ If you want your application to crash in case of leader election errors, just om
   key
 
 }
-'''
+```
