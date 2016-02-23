@@ -1,2 +1,2 @@
 --require mocha-cakes-2
---timeout 1
+--timeout 10000

@@ -2,26 +2,24 @@
 
 var consul = require("consul");
 var EventEmitter = require("events");
+var _ = require("lodash");
 
-var READ_WAIT = "180"; // seconds
-var LOCK_DELAY = "10"; // seconds
-var TTL = "15";        // seconds
-
-function session(options, emitter) {
+function session(opts, emitter) {
     emitter = emitter || new EventEmitter();
-    var cOpts = options.consul || {};
-    var client = consul({host: cOpts.host, port: cOpts.port, defaults: {token: cOpts.token}});
+    opts = _.defaultsDeep(opts, {debug: _.noop, consul: {ttl: 15, lockDelay: 10, readWait: 180}});
+    opts.debug("Using options", opts);
+    var client = consul(
+      {host: opts.consul.host, port: opts.consul.port, defaults: {token: opts.consul.token}});
     var isLeader = false;
-    var debug = options.debug || function () {};
-    var key = options.key;
     var sessionId, renewTimer, waitIndex, resetTimer;
 
+    // Try to claim leadeship by locking key. Emit appropriate events to caller.
     function claimLeadership() {
-      client.kv.set(key, "leader", {acquire: sessionId}, function (err, acquired) {
+      client.kv.set(opts.key, "leader", {acquire: sessionId}, function (err, acquired) {
         if (handleError(err)) return;
-        debug("Claimed. Leader: ", isLeader, ", result:", acquired);
+        opts.debug("Claimed. Leader: ", isLeader, ", result:", acquired);
         if (!isLeader && acquired) {
-          emitter.emit("gainedLeadership");
+          emitter.emit("gainedLeadership", sessionId);
         }
         if (isLeader && !acquired) {
           emitter.emit("lostLeadership");
@@ -31,47 +29,55 @@ function session(options, emitter) {
       });
     }
 
+    // Read key and wait for changes. If no session is attached to the key, try to
+    // claim leadership after waiting for the LOCK DELAY to expire.
     function wait() {
-      client.kv.get({key: key, index: waitIndex, wait: READ_WAIT + "s"}, function (err, result) {
+      var waitCmd = {key: opts.key, index: waitIndex, wait: opts.consul.readWait + "s"};
+      client.kv.get(waitCmd, function (err, res) {
         if (handleError(err)) return;
-        debug("Read key", key, "result: ", result);
-        waitIndex = result.ModifyIndex;
-        if (!result.Session) {
+        opts.debug("Read key", opts.key, "result: ", res);
+        waitIndex = res.ModifyIndex;
+        if (!res.Session) {
           if (isLeader) {
             isLeader = false;
             emitter.emit("lostLeadership");
           }
-          debug("No session for key", key, ", will try to aquire in", LOCK_DELAY, "secs");
-          setTimeout(claimLeadership, LOCK_DELAY * 1000);
+          opts.debug("No session for ", opts.key, ", aquire in", opts.consul.lockDelay, "secs");
+          setTimeout(claimLeadership, opts.consul.lockDelay * 1000);
         } else {
           setImmediate(wait);
         }
       });
     }
 
+    // Renew session so it won't expire
     function renewSession() {
       client.session.renew(sessionId, function (err) {
           if (handleError(err)) return;
-         debug("Renewed session", sessionId);
+         opts.debug("Renewed session", sessionId);
       });
     }
 
+    // Schedules creation of new session and emit "error" if an error has occured.
+    // If a new session is already scheduled, we do not re-schedule.
     function handleError(err) {
       if (resetTimer) return true;
       if (err) {
         emitter.emit("error", err);
         clearInterval(renewTimer);
         client.session.destroy(sessionId, function () {});
-        resetTimer = setTimeout(function () { session(options, emitter); }, 3000);
+        resetTimer = setTimeout(function () { session(opts, emitter); }, 3000);
       }
       return err;
     }
 
-    client.session.create({ttl: TTL + "s", lockdelay: LOCK_DELAY + "s"}, function (err, session) {
+    // Create session and start renew timer to keep it alive. The try to claim key.
+    var sessionCmd = {ttl: opts.consul.ttl + "s", lockdelay: opts.consul.lockDelay + "s"};
+    client.session.create(sessionCmd, function (err, session) {
       if (handleError(err)) return;
-      debug("Created new session", session);
+      opts.debug("Created new session", session);
       sessionId = session.ID;
-      renewTimer = setInterval(renewSession, TTL * 1000 * 0.9);
+      renewTimer = setInterval(renewSession, opts.consul.ttl * 1000 * 0.9);
       return setImmediate(claimLeadership);
     });
 

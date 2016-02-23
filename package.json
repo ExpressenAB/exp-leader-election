@@ -26,6 +26,7 @@
     "mocha-cakes-2": "^0.1.0"
   },
   "dependencies": {
-    "consul": "^0.23.0"
+    "consul": "^0.23.0",
+    "lodash": "^4.5.1"
   }
 }
