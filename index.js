@@ -66,17 +66,19 @@ function session(opts, emitter) {
         emitter.emit("error", err);
         clearInterval(renewTimer);
         client.session.destroy(sessionId, function () {});
-        resetTimer = setTimeout(function () { session(opts, emitter); }, 3000);
+        resetTimer = setTimeout(function () {
+          session(opts, emitter);
+        }, 3000);
       }
       return err;
     }
 
     // Create session and start renew timer to keep it alive. The try to claim key.
     var sessionCmd = {ttl: opts.consul.ttl + "s", lockdelay: opts.consul.lockDelay + "s"};
-    client.session.create(sessionCmd, function (err, session) {
+    client.session.create(sessionCmd, function (err, newSession) {
       if (handleError(err)) return;
-      opts.debug("Created new session", session);
-      sessionId = session.ID;
+      opts.debug("Created new session", newSession);
+      sessionId = newSession.ID;
       renewTimer = setInterval(renewSession, opts.consul.ttl * 1000 * 0.9);
       return setImmediate(claimLeadership);
     });

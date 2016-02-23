@@ -1,0 +1,11 @@
+{
+  "parser": "espree",
+  "env": {
+    "node": true
+  },
+  "extends": "../.eslintrc",
+  "rules": {
+    "no-undef": 0,
+    "new-cap": 0
+  }
+}

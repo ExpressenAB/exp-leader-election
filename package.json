@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "description": "Simple leader election library",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha && eslint ."
   },
   "repository": {
     "type": "git",
