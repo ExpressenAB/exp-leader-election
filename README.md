@@ -36,8 +36,9 @@ leaderElection(config)
 ### The let-it-crash way
 
 If you want your application to crash in case of leader election errors, just omit the
-"error" listener. Usually you would have a process manager such as pm2 in place to ensure
-that the application is being restarted.
+"error" listener. This is the simplest and most robust way to deal with errors, 
+but it requires that you have a process manager (such as forever or pm2) in place to 
+ensure that the application is restarted again.
 
 ## Configuration
 
@@ -59,15 +60,15 @@ that the application is being restarted.
 ```
 ### Consul
 
-* 'consul.host': Consul hostname or ip (string)
-* 'consul.port': Consul port (number)
-* 'consul.ttl': Tuning, session ttl seconds (number, default 15)
-* 'consul.lockDelay': Tuning, session lock-delay seconds (number, default 10)
-* 'consul.readWait': Tuning, read wait seconds (number, default 180)
+* `consul.host`: Consul hostname or ip (string)
+* `consul.port`: Consul port (number)
+* `consul.ttl`: Tuning, session ttl seconds (number, default 15)
+* `consul.lockDelay`: Tuning, session lock-delay seconds (number, default 10)
+* `consul.readWait`: Tuning, read wait seconds (number, default 180)
 
 To read more about the tuning parameters, see
 https://www.consul.io/docs/internals/sessions.html
 
 ### Debugging
 
-* 'debug': function accepting a variable number of args. Supply if you want to print debugging info.
+* `debug`: function accepting a variable number of args. Supply if you want to print debugging info.
