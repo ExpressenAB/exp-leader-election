@@ -8,7 +8,7 @@ https://www.consul.io/docs/guides/leader-election.html
 
 ### Basic example
 
-Connect to consul on localhost/8500 and get notified about leadership status.
+Connect to consul and get notified about leadership status.
 
 ```javascript
 var leaderElection = require("exp-leader-election");
