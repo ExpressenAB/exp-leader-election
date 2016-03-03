@@ -12,6 +12,7 @@ Connect to consul and get notified about leadership status.
 
 ```javascript
 var leaderElection = require("exp-leader-election");
+var service = require("my-little-service");
 
 var config = {
   key: "locks/my-little-service",
@@ -23,21 +24,20 @@ var config = {
 leaderElection(config)
 .on("gainedLeadership", function () {
     // Whoo-hoo, we have been elected as leader! Do work.
-  })
-.on("lostLeadership"), function () {
-   // Uh-oh, we are lo longer the leader. Stop work.
+    service.startDoingWork();
   })
 .on("error"), function () {
-   // Error occured. State is unknown, so depending on the application we might need to stop work.
+   // Error occured, stop work.
    log.error("Leader election error occured", error);
+   service.stopDoingWork();
   });
 ```
 
 ### The let-it-crash way
 
 If you want your application to crash in case of leader election errors, just omit the
-"error" listener. This is the simplest and most robust way to deal with errors, 
-but it requires that you have a process manager (such as forever or pm2) in place to 
+"error" listener. This is the simplest and most robust way to deal with errors,
+but it requires that you have a process manager (such as forever or pm2) in place to
 ensure that the application is restarted again.
 
 ## Configuration
