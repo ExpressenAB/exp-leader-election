@@ -22,7 +22,7 @@ function session(opts, emitter) {
           emitter.emit("gainedLeadership", sessionId);
         }
         if (isLeader && !acquired) {
-          emitter.emit("lostLeadership");
+          return handleError("lostLeadership");
         }
         isLeader = acquired;
         wait();
@@ -40,7 +40,7 @@ function session(opts, emitter) {
         if (!res.Session) {
           if (isLeader) {
             isLeader = false;
-            emitter.emit("lostLeadership");
+            return handleError("lostLeadership");
           }
           opts.debug("No session for ", opts.key, ", aquire in", opts.consul.lockDelay, "secs");
           setTimeout(claimLeadership, opts.consul.lockDelay * 1000);
@@ -53,8 +53,8 @@ function session(opts, emitter) {
     // Renew session so it won't expire
     function renewSession() {
       client.session.renew(sessionId, function (err) {
-          if (handleError(err)) return;
-         opts.debug("Renewed session", sessionId);
+        if (handleError(err)) return;
+        opts.debug("Renewed session", sessionId);
       });
     }
 
