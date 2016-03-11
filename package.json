@@ -1,6 +1,11 @@
 {
   "name": "exp-leader-election",
-  "version": "0.2.0",
+  "version": "0.2.1",
+  "author": "AB Kvällstidningen Expressen",
+  "contributors": [
+    "norla",
+    "joelabrahamsson"
+  ],
   "description": "Simple leader election library",
   "scripts": {
     "test": "mocha && eslint ."
