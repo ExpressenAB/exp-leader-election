@@ -26,7 +26,7 @@ leaderElection(config)
     // Whoo-hoo, we have been elected as leader! Do work.
     service.startDoingWork();
   })
-.on("error"), function () {
+.on("error", function () {
    // Error occured, stop work.
    log.error("Leader election error occured", error);
    service.stopDoingWork();
