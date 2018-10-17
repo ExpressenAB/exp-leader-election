@@ -4,9 +4,11 @@
 // consul agent -dev -advertise=127.0.0.1
 
 var leaderElection = require("../");
+const uuidv1 = require('uuid/v1');
 var prefix = "exp-leader-election-feature-test-";
 var testKey = prefix + new Date().getTime();
-var config = {key: testKey, consul: {ttl: 10, lockDelay: 0, readWait: 180}};
+var clientToken = uuidv1() //Client validation appears to require the existene of a token even if unused
+var config = {key: testKey, consul: {ttl: 10, lockDelay: 0, readWait: 180, token: clientToken}}; 
 var consul = require("consul")();
 
 Feature("Elect leader", function () {
