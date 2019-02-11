@@ -1,6 +1,6 @@
 {
   "name": "exp-leader-election",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": "Mattias Norlander <mattias.norlander@gmail.com>",
   "contributors": [
     "norla",
