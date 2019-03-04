@@ -11,14 +11,14 @@ var consul = require("consul")();
 
 Feature("Elect leader", function () {
 
-  after(function (done) {
+  before(function (done) {
     consul.kv.delete({key: prefix, recurse: true}, done);
   });
 
   Scenario("Two clients", function () {
     var client, client2;
     var sessionId;
-    When("First client is connected to consul it should be leader", function () {
+    When("First client is connected to consul it should be leader", function (done) {
       client = leaderElection(config);
       client.on("gainedLeadership", function (pSessionId) {
         sessionId = pSessionId;
