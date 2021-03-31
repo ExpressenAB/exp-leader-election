@@ -17,8 +17,9 @@ function session(opts, emitter) {
         timeout: opts.consul.readWait * 2 * 1000
       }
     });
+    var isResigning = false;
     var isLeader = false;
-    var sessionId, renewTimer, waitIndex, resetTimer;
+    var sessionId, renewTimer, waitIndex, resetTimer, waitTimer;
 
     // Try to claim leadeship by locking key. Emit appropriate events to caller.
     function claimLeadership() {
@@ -50,7 +51,7 @@ function session(opts, emitter) {
             return handleError("lostLeadership");
           }
           opts.debug("No session for ", opts.key, ", aquire in", opts.consul.lockDelay, "secs");
-          setTimeout(claimLeadership, opts.consul.lockDelay * 1000);
+          waitTimer = setTimeout(claimLeadership, opts.consul.lockDelay * 1000);
         } else {
           setImmediate(wait);
         }
@@ -68,6 +69,7 @@ function session(opts, emitter) {
     // Schedules creation of new session and emit "error" if an error has occured.
     // If a new session is already scheduled, we do not re-schedule.
     function handleError(err) {
+      if (isResigning) return true;
       if (resetTimer) return true;
       if (err) {
         emitter.emit("error", err);
@@ -80,6 +82,15 @@ function session(opts, emitter) {
       return err;
     }
 
+    function resign() {
+        clearInterval(renewTimer);
+        clearTimeout(waitTimer);
+        clearTimeout(resetTimer);
+        isResigning = true;
+        client.session.destroy(sessionId, function () {});
+        emitter.emit("resignedLeadership");
+    }
+
     // Create session and start renew timer to keep it alive. The try to claim key.
     var sessionCmd = {ttl: opts.consul.ttl + "s", lockdelay: opts.consul.lockDelay + "s"};
     client.session.create(sessionCmd, function (err, newSession) {
@@ -89,6 +100,8 @@ function session(opts, emitter) {
       renewTimer = setInterval(renewSession, opts.consul.ttl * 1000 * 0.9);
       return setImmediate(claimLeadership);
     });
+
+    emitter.on("resign", resign)
 
     return emitter;
 }
