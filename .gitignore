@@ -24,3 +24,6 @@ node_modules
 .DS_Store
 
 trusted-dockerfile-*
+
+package-lock.json
+.eslintcache

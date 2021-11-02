@@ -1,5 +1,7 @@
 # Leader election for nodejs applications
 
+[![Run tests](https://github.com/ExpressenAB/exp-leader-election/actions/workflows/run-tests.yml/badge.svg?branch=master)](https://github.com/ExpressenAB/exp-leader-election/actions/workflows/run-tests.yml)
+
 Elect a leader among several nodes using consul.
 
 https://www.consul.io/docs/guides/leader-election.html
