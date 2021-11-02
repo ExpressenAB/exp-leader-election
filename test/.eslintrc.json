@@ -1,9 +1,9 @@
 {
-  "parser": "espree",
   "env": {
-    "node": true
+    "node": true,
+    "mocha": true
   },
-  "extends": "../.eslintrc",
+  "extends": "../.eslintrc.json",
   "rules": {
     "no-undef": 0,
     "new-cap": 0

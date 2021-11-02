@@ -1,0 +1,35 @@
+name: Run tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x]
+    services:
+      consul:
+        image: consul
+        ports:
+        - 8500/tcp
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        run: npm i
+
+      - name: Run Tests
+        run: npm test
+        env:
+          CONSUL_PORT: ${{ job.services.consul.ports[8500] }}
