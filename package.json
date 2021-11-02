@@ -17,9 +17,10 @@
   },
   "keywords": [
     "Leader",
-    "election"
+    "election",
+    "consul"
   ],
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/ExpressenAB/exp-leader-election/issues"
   },
